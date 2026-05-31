@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🚗 BengkelAI
 
-## Getting Started
+> **An AI-Powered Smart Assistant for MSME Auto Repair Shops in Indonesia.**
 
-First, run the development server:
+[![Next.js](https://img.shields.io/badge/Next.js-14+-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Anthropic Claude](https://img.shields.io/badge/AI-Claude_3.5_Sonnet-8A2BE2?style=flat&logo=anthropic)](https://anthropic.com/)
+
+**Live Demo:** [Visit BengkelAI](https://[LINK_VERCEL_AKANG])
+
+## 📖 Overview
+
+BengkelAI is a mobile-first web application designed to help mechanics and owners of MSME (UMKM) auto repair shops. It leverages Generative AI (Anthropic Claude 3.5 Sonnet) to analyze vehicle complaints, generate customer-friendly explanations, create professional WhatsApp billing messages, and manage service history seamlessly.
+
+## ✨ Key Features
+
+- **🤖 AI Diagnostics (Tanya Kerusakan):** Input vehicle symptoms and get instant AI analysis, including root causes, recommended actions, and cost estimates.
+- **💬 Smart WhatsApp Generator:** Automatically draft polite, professional WhatsApp messages for customers based on diagnostic results. Includes a 1-click "Send via WA" deep-linking feature.
+- **📱 Mobile-First Soft UI:** Beautiful, intuitive Neumorphic design optimized for mechanics using smartphones with dirty hands or gloves (large touch targets, anti-zoom inputs).
+- **📊 Offline-First Local Storage:** All service histories and configurations are safely stored in the browser's `localStorage`. No complex backend required.
+- **📈 Financial Dashboard & Export:** Track monthly revenue, view pending payments, and export service history to CSV for bookkeeping.
+
+## 🛠️ Tech Stack
+
+- **Framework:** [Next.js](https://nextjs.org/) (App Router)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/) (Custom Soft UI/Neumorphism)
+- **Icons:** [Lucide React](https://lucide.dev/)
+- **AI Integration:** [Puter.js](https://puter.com/) (Wrapper for Anthropic Claude 3.5 Sonnet)
+- **State Management:** React Hooks (`useState`, `useEffect`) + Browser `localStorage`
+- **Deployment:** [Vercel](https://vercel.com/)
+
+## 🚀 Running Locally
+
+To run this project on your local machine:
+
+1. **Clone the repository:**
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+   git clone [https://github.com/Randif444/bengkel-ai.git](https://github.com/Randif444/bengkel-ai.git)
+   cd bengkel-ai
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
