@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   MessageSquare,
@@ -9,6 +9,7 @@ import {
   Edit,
   Send,
   CheckCircle2,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
@@ -17,14 +18,10 @@ import { generateWhatsAppMessage } from "@/lib/anthropic";
 import { saveService } from "@/lib/storage";
 
 /**
- * WhatsApp Message Generator Page
- * Handles manual input and auto-filled data from URL parameters to generate
- * polite, professional WhatsApp messages using Anthropic AI.
- * Features auto-formatting currency inputs and direct WhatsApp deep-linking.
- *
- * @returns {JSX.Element} The rendered WhatsApp generator page
+ * Internal Component for WhatsApp Message Generator
+ * Handled inside a Suspense boundary to comply with Next.js build requirements.
  */
-export default function PesanPage() {
+function PesanContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -32,10 +29,12 @@ export default function PesanPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [copied, setCopied] = useState(false);
+  const [isAutoFilled, setIsAutoFilled] = useState(false);
 
   const [formData, setFormData] = useState({
     nama_pelanggan: "",
     no_wa: "",
+    kendaraan: "", // Field kendaraan dikembalikan
     ringkasan_kerusakan: "",
     estimasi_biaya: "",
     estimasi_selesai: "",
@@ -45,16 +44,61 @@ export default function PesanPage() {
   const [generatedMessage, setGeneratedMessage] = useState("");
 
   /**
-   * Auto-populates form data from URL search parameters on component mount.
-   * Automatically formats incoming numerical cost estimates to IDR currency format.
+   * Smart Auto-Fill: Menarik data draf dari halaman Diagnosis secara otomatis.
+   * Mencegah mekanik mengetik ulang data yang sama.
    */
   useEffect(() => {
+    // 1. Coba tarik data lengkap dari Draf (bengkelai_draft) terlebih dahulu
+    try {
+      const draftString = localStorage.getItem("bengkelai_draft");
+      if (draftString) {
+        const draftData = JSON.parse(draftString);
+
+        // Format uang ke Rupiah bertitik
+        const rawBiaya = draftData.total_biaya || "";
+        const formattedBiaya = rawBiaya
+          ? new Intl.NumberFormat("id-ID").format(rawBiaya)
+          : "";
+
+        // Gabungkan Merk dan Plat Nomor
+        const kendaraanInfo = [draftData.merk_kendaraan, draftData.plat_nomor]
+          .filter(Boolean)
+          .join(" - ");
+
+        // Gabungkan keluhan asli dan tindakan yang dicentang mekanik
+        let tindakanText = draftData.keluhan || "";
+        if (
+          draftData.tindakan_dipilih &&
+          draftData.tindakan_dipilih.length > 0
+        ) {
+          const listTindakan = draftData.tindakan_dipilih
+            .map((t) => t.nama)
+            .join(", ");
+          tindakanText += `\nPenanganan: ${listTindakan}`;
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          nama_pelanggan: draftData.nama_pemilik || prev.nama_pelanggan,
+          kendaraan: kendaraanInfo,
+          ringkasan_kerusakan: tindakanText,
+          estimasi_biaya: formattedBiaya,
+        }));
+
+        setIsAutoFilled(true);
+        setTimeout(() => setIsAutoFilled(false), 5000);
+        return; // Selesai, hentikan fungsi agar tidak tertimpa URL
+      }
+    } catch (e) {
+      console.error("Gagal membaca draf:", e);
+    }
+
+    // 2. Fallback: Jika tidak ada draf, baca dari URL (searchParams)
     const nama = searchParams.get("nama");
     const keluhan = searchParams.get("keluhan");
     const estimasi = searchParams.get("estimasi");
 
     if (nama || keluhan || estimasi) {
-      // Ensure any incoming cost data from URL is properly formatted to IDR
       let formattedEstimasi = estimasi || "";
       if (estimasi) {
         const rawValue = estimasi.replace(/\D/g, "");
@@ -65,19 +109,13 @@ export default function PesanPage() {
 
       setFormData((prev) => ({
         ...prev,
-        nama_pelanggan: nama || "",
-        ringkasan_kerusakan: keluhan || "",
+        nama_pelanggan: nama || prev.nama_pelanggan,
+        ringkasan_kerusakan: keluhan || prev.ringkasan_kerusakan,
         estimasi_biaya: formattedEstimasi,
       }));
     }
   }, [searchParams]);
 
-  /**
-   * Handles currency input changes with real-time Indonesian Rupiah (IDR) formatting.
-   * Converts raw numerical strings into formatted strings (e.g., "1500000" -> "1.500.000").
-   *
-   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event
-   */
   const handleBiayaChange = (e) => {
     const rawValue = e.target.value.replace(/\D/g, "");
     if (!rawValue) {
@@ -88,12 +126,6 @@ export default function PesanPage() {
     setFormData((prev) => ({ ...prev, estimasi_biaya: formattedValue }));
   };
 
-  /**
-   * Submits the structured form data to the AI service to generate a WhatsApp message.
-   * Validates required fields before initiating the API call.
-   *
-   * @param {React.FormEvent} e - The form submission event
-   */
   const handleGenerate = async (e) => {
     e.preventDefault();
     setErrorMsg("");
@@ -111,7 +143,13 @@ export default function PesanPage() {
     setLoading(true);
 
     try {
-      const result = await generateWhatsAppMessage(formData);
+      // Gabungkan kendaraan ke ringkasan saat dikirim ke AI agar konteksnya jelas
+      const payloadData = {
+        ...formData,
+        ringkasan_kerusakan: `Kendaraan: ${formData.kendaraan}\nDetail: ${formData.ringkasan_kerusakan}`,
+      };
+
+      const result = await generateWhatsAppMessage(payloadData);
       setGeneratedMessage(result);
       setView("preview");
     } catch (error) {
@@ -121,10 +159,6 @@ export default function PesanPage() {
     }
   };
 
-  /**
-   * Copies the AI-generated text to the device's clipboard.
-   * Displays a temporary success indicator upon completion.
-   */
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(generatedMessage);
@@ -135,10 +169,6 @@ export default function PesanPage() {
     }
   };
 
-  /**
-   * Opens WhatsApp directly with the pre-filled message using the wa.me deep link.
-   * Strips non-numeric characters from the phone number before appending.
-   */
   const handleOpenWA = () => {
     if (!formData.no_wa) {
       alert("Masukkan nomor WhatsApp pelanggan terlebih dahulu.");
@@ -149,14 +179,8 @@ export default function PesanPage() {
     window.open(url, "_blank");
   };
 
-  /**
-   * Saves the finalized service data and generated WhatsApp message to local storage.
-   * Cleans up numerical formatting (removes dots) before saving to ensure data integrity.
-   * Redirects the user to the report page upon success.
-   */
   const handleSaveAndFinish = () => {
     const draftString = localStorage.getItem("bengkelai_draft");
-    // Strip formatting dots before saving to storage as a primitive Number
     const cleanBiaya = Number(formData.estimasi_biaya.replace(/\./g, ""));
 
     if (draftString) {
@@ -243,11 +267,20 @@ export default function PesanPage() {
   }
 
   return (
-    <main className="p-4 flex flex-col gap-5">
+    <main className="p-4 flex flex-col gap-5 pb-24">
       <div className="flex items-center gap-2">
         <MessageSquare className="w-6 h-6 text-[#534AB7]" />
         <h1 className="text-xl font-bold">Generator Pesan WA</h1>
       </div>
+
+      {isAutoFilled && (
+        <div className="bg-[#F0F9FF] border border-[#bae6fd] p-4 rounded-[16px] flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+          <Info className="w-5 h-5 text-[#0284C7] flex-shrink-0" />
+          <p className="text-[13px] text-[#0369A1] font-medium leading-relaxed">
+            Data otomatis ditarik dari hasil diagnosis.
+          </p>
+        </div>
+      )}
 
       {errorMsg && (
         <div className="bg-red-50 text-red-600 rounded-[8px] p-3 text-sm">
@@ -272,6 +305,14 @@ export default function PesanPage() {
               setFormData({ ...formData, no_wa: e.target.value })
             }
           />
+          <Input
+            label="Mobil / Kendaraan"
+            placeholder="Contoh: Avanza 2018"
+            value={formData.kendaraan}
+            onChange={(e) =>
+              setFormData({ ...formData, kendaraan: e.target.value })
+            }
+          />
         </Card>
 
         <Card className="flex flex-col gap-3">
@@ -282,13 +323,19 @@ export default function PesanPage() {
               setFormData({ ...formData, ringkasan_kerusakan: e.target.value })
             }
           />
-          <Input
-            type="text"
-            inputMode="numeric"
-            label="Estimasi Biaya (Rp)"
-            value={formData.estimasi_biaya}
-            onChange={handleBiayaChange}
-          />
+          <div className="relative">
+            <Input
+              type="text"
+              inputMode="numeric"
+              label="Estimasi Biaya (Rp)"
+              value={formData.estimasi_biaya}
+              onChange={handleBiayaChange}
+              className="pl-12"
+            />
+            <span className="absolute left-4 top-[35px] text-gray-500 font-medium select-none">
+              Rp
+            </span>
+          </div>
           <Input
             label="Estimasi Waktu Selesai"
             placeholder="Hari ini jam 16.00"
@@ -330,5 +377,24 @@ export default function PesanPage() {
         </Button>
       </form>
     </main>
+  );
+}
+
+/**
+ * Main Export wrapped in React Suspense boundary.
+ * Prevents Next.js build errors triggered by useSearchParams() static rendering.
+ */
+export default function SuspenseWrapper() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-4 flex flex-col items-center justify-center min-h-[70vh] gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-[#534AB7]" />
+          <p className="text-sm font-medium text-gray-500">Memuat Halaman...</p>
+        </div>
+      }
+    >
+      <PesanContent />
+    </Suspense>
   );
 }

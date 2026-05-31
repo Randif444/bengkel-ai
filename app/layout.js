@@ -8,10 +8,24 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 /**
+ * Viewport Configuration for Next.js App Router.
+ * Next.js 14+ requires viewport and themeColor to be exported separately from metadata.
+ * Forces mobile-first rendering and prevents iOS auto-zoom.
+ */
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#1D9E75",
+};
+
+/**
  * Global Metadata Configuration for Next.js App Router.
- * Handles SEO, Social Media Link Previews (Open Graph), and Browser configurations.
+ * Handles SEO, Social Media Link Previews (Open Graph).
  */
 export const metadata = {
+  metadataBase: new URL("https://bengkelai.vercel.app"), // Required for absolute OG image paths
   title: "BengkelAI - Asisten Cerdas Bengkel UMKM",
   description:
     "Aplikasi asisten mekanik bertenaga AI untuk mendiagnosis kerusakan mobil, membuat estimasi biaya, dan mengelola histori servis bengkel UMKM.",
@@ -26,16 +40,15 @@ export const metadata = {
   ],
   authors: [{ name: "Randi" }],
 
-  // Open Graph (For rich previews on WhatsApp, Facebook, LinkedIn)
   openGraph: {
     title: "BengkelAI - Asisten Cerdas Bengkel UMKM",
     description:
       "Tingkatkan pelayanan bengkel Anda dengan diagnosis AI dan manajemen histori servis yang mudah.",
-    url: "https://bengkelai.vercel.app", // Update this with your actual Vercel domain later
+    url: "/",
     siteName: "BengkelAI",
     images: [
       {
-        src: "/og-image.jpg", // Pointing to public/og-image.jpg
+        src: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "BengkelAI Dashboard Preview",
@@ -45,18 +58,12 @@ export const metadata = {
     type: "website",
   },
 
-  // Twitter Card configuration
   twitter: {
     card: "summary_large_image",
     title: "BengkelAI - Asisten Cerdas Bengkel UMKM",
     description: "Tingkatkan pelayanan bengkel Anda dengan diagnosis AI.",
-    images: ["/og-image.jpg"], // Pointing to public/og-image.jpg
+    images: ["/og-image.jpg"],
   },
-
-  // Prevent auto-zoom on iOS inputs and define theme color
-  viewport:
-    "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
-  themeColor: "#1D9E75",
 };
 
 export default function RootLayout({ children }) {
