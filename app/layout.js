@@ -25,7 +25,7 @@ export const viewport = {
  * Handles SEO, Social Media Link Previews (Open Graph).
  */
 export const metadata = {
-  metadataBase: new URL("https://bengkelai.vercel.app"), // Required for absolute OG image paths
+  metadataBase: new URL("https://bengkel-ai.vercel.app"), // Required for absolute OG image paths
   title: "BengkelAI - Asisten Cerdas Bengkel UMKM",
   description:
     "Aplikasi asisten mekanik bertenaga AI untuk mendiagnosis kerusakan mobil, membuat estimasi biaya, dan mengelola histori servis bengkel UMKM.",
