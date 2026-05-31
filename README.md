@@ -6,7 +6,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Anthropic Claude](https://img.shields.io/badge/AI-Claude_3.5_Sonnet-8A2BE2?style=flat&logo=anthropic)](https://anthropic.com/)
 
-**Live Demo:** [Visit BengkelAI](https://[LINK_VERCEL_AKANG])
+**Live Demo:** [Visit BengkelAI](https://bengkel-ai.vercel.app)
 
 ## 📖 Overview
 
